@@ -25,11 +25,18 @@
 
 #include <xc.h>
 
+void moveLED(void);
+
 unsigned long _XTAL_FREQ = 400000;
 
+enum directions{
+    LEFT = -1,
+    RIGHT = 1
+};
+int currentDirection = LEFT;
 
 /*
- * 
+ *  Executes the task
  */
 void main(void) {
 
@@ -40,16 +47,51 @@ void main(void) {
     // Make all PORTC pins outputs
     TRISC = 0;
     
+    // Makes sure PORTC is clear
     PORTC = 0;
+    
     while (1) {
         
         __delay_ms(500);
-        if (PORTC == 0)
-            PORTC = 1;
-        else
-            PORTC <<= 1;
+        moveLED();
         
     }
     
+}
+
+/*
+ *  Moves an LED by one position depending on the global currentDirection variable
+ */
+void moveLED(void) {
+    enum directions direction = currentDirection;
+    
+    // Resets the LEDs with the correct position depending on the direction
+    if (PORTC == 0) {
+        switch(direction) {
+            case RIGHT:
+                PORTC = 0b10000000;
+                break;
+            case LEFT:
+                PORTC = 0b00000001;
+                break;
+            default:
+                break;
+        }
+        return;
+    }
+
+    
+    // Moves the LED in the correct direction
+    switch(direction) {
+        case RIGHT:
+            PORTC >>= 1;
+            break;
+        case LEFT:
+            PORTC <<= 1;
+            break;
+        default:
+            break;
+    }
+        
 }
 
