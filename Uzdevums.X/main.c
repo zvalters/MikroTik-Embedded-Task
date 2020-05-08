@@ -25,11 +25,31 @@
 
 #include <xc.h>
 
+unsigned long _XTAL_FREQ = 400000;
+
+
 /*
  * 
  */
 void main(void) {
 
+    // Disable analog input/output
+    ANSELB = 0;
+    ANSELC = 0;
+    
+    // Make all PORTC pins outputs
+    TRISC = 0;
+    
+    PORTC = 0;
+    while (1) {
+        
+        __delay_ms(500);
+        if (PORTC == 0)
+            PORTC = 1;
+        else
+            PORTC <<= 1;
+        
+    }
     
 }
 
