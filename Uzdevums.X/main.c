@@ -41,7 +41,7 @@ int currentDirection = RIGHT;
 bool buttonPressed = false;
 
 // PR2 values for different notes with TMR2 pre-scaler of 16
-// Unused notes are commented
+// Unused notes are commented out
 typedef enum  {
     //B3  = 254,
     //C4  = 240,
@@ -102,11 +102,15 @@ void main(void) {
     // Make all PORTC pins outputs
     TRISC = 0;
     
+    // Makes sure PORTC is clear
+    PORTC = 0;
+    
     // Configures the button
     TRISBbits.TRISB6 = 1;   // Make PORTB pin6 an input for the button
     INTCONbits.GIE = 1;     // Enables interrupts
     INTCONbits.IOCIE = 1;   // Enables interrupts on change
     IOCBPbits.IOCBP6 = 1;   // Detects the rising edge on PORTB pin6
+    
     
     // Prepares a timer for debouncing the button
     //Timer0 Registers Prescaler= 64 - TMR0 Preset = 99 - Freq = 99.52 Hz - Period = 0.010048 seconds
@@ -128,10 +132,8 @@ void main(void) {
     TMR1H = 133;             // preset for timer1 MSB register
     TMR1L = 163;             // preset for timer1 LSB register
 
-    
     INTCONbits.PEIE = 1;    // Enables interrupts for TMR1
     PIE1bits.TMR1IE = 1;
-
 
     
     // Prepares the buzzer
@@ -146,10 +148,7 @@ void main(void) {
     PWM3CONbits.PWM3EN = 1;	    // Enables the PWM3 module. Note: output is still off
     TRISAbits.TRISA2 = 0;       // Enables output on RA2
     
-    
-    // Makes sure PORTC is clear
-    PORTC = 0;
-    
+    // Plays the song on a loop
     while (1) {
         
         playSong();
@@ -171,7 +170,7 @@ void __interrupt () isr_routine(void) {
     // Handles checking for debounce on the button
     if (INTCONbits.T0IF) {
         if (buttonPressed) {
-            if (PORTBbits.RB6)
+            if (PORTBbits.RB6)      // If it is still active, then change direction
                 currentDirection = -currentDirection;
             buttonPressed = false;
             INTCONbits.T0IE = 0;    // Disable Timer0 interrupt
@@ -229,7 +228,9 @@ void moveLED(void) {
         
 }
 
-
+/*
+ *  Plays the song using the currentDirection
+ */
 void playSong(void) {
     
     enum directions direction = currentDirection;
