@@ -24,6 +24,7 @@
 
 
 #include <xc.h>
+#include <stdbool.h>
 
 void moveLED(void);
 
@@ -34,6 +35,7 @@ enum directions{
     RIGHT = 1
 };
 int currentDirection = LEFT;
+bool buttonPressed = false;
 
 /*
  *  Executes the task
@@ -53,6 +55,15 @@ void main(void) {
     INTCONbits.IOCIE = 1;   // Enables interrupts on change
     IOCBPbits.IOCBP6 = 1;   // Detects the rising edge on PORTB pin6
     
+    // Prepares a timer for debouncing the button
+    // Timer0 Registers Prescaler= 4 - TMR0 Preset = 6 - Freq = 1.00 Hz - Period = 1.000000 seconds
+    OPTION_REGbits.T0CS = 0;  // bit 5  TMR0 Clock Source Select bit...0 = Internal Clock (CLKO) 1 = Transition on T0CKI pin
+    OPTION_REGbits.T0SE = 0;  // bit 4 TMR0 Source Edge Select bit 0 = low/high 1 = high/low
+    OPTION_REGbits.PSA = 0;   // bit 3  Prescaler Assignment bit...0 = Prescaler is assigned to the Timer0
+    OPTION_REGbits.PS2 = 0;   // bits 2-0  PS2:PS0: Prescaler Rate Select bits
+    OPTION_REGbits.PS1 = 0;
+    OPTION_REGbits.PS0 = 1;
+    
     // Makes sure PORTC is clear
     PORTC = 0;
     
@@ -67,8 +78,19 @@ void main(void) {
 
 void __interrupt () isr_routine(void) {
     
-    if (IOCBFbits.IOCBF6)  {
-        currentDirection = -currentDirection;
+    if (buttonPressed && INTCONbits.T0IF) {
+        if (PORTBbits.RB6)
+            currentDirection = -currentDirection;
+        buttonPressed = false;
+        INTCONbits.T0IE = 0;
+        INTCONbits.T0IF = 0;
+    }
+    
+    if (!buttonPressed && IOCBFbits.IOCBF6)  {
+        buttonPressed = true;
+        // Start Timer
+        TMR0 = 6;               // preset for timer register
+        INTCONbits.T0IE = 1;    // Enable timer
         IOCBFbits.IOCBF6 = 0;
     }
     
