@@ -40,12 +40,18 @@ int currentDirection = LEFT;
  */
 void main(void) {
 
-    // Disable analog input/output
+    // Disable analog input/output for PORTB and PORTC
     ANSELB = 0;
     ANSELC = 0;
     
     // Make all PORTC pins outputs
     TRISC = 0;
+    
+    // Configures the button
+    TRISBbits.TRISB6 = 1;   // Make PORTB pin6 an input for the button
+    INTCONbits.GIE = 1;     // Enables interrupts
+    INTCONbits.IOCIE = 1;   // Enables interrupts on change
+    IOCBPbits.IOCBP6 = 1;   // Detects the rising edge on PORTB pin6
     
     // Makes sure PORTC is clear
     PORTC = 0;
@@ -58,6 +64,16 @@ void main(void) {
     }
     
 }
+
+void __interrupt () isr_routine(void) {
+    
+    if (IOCBFbits.IOCBF6)  {
+        currentDirection = -currentDirection;
+        IOCBFbits.IOCBF6 = 0;
+    }
+    
+}
+
 
 /*
  *  Moves an LED by one position depending on the global currentDirection variable
