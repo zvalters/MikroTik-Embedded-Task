@@ -253,7 +253,7 @@ void playSong(void) {
         // (PR2 * 2) gets spread between two registers which provides a 50% duty cycle
         PR2 = song[i].key;
         PWM3DCLbits.PWM3DCL0 = 0;
-        PWM3DCLbits.PWM3DCL0 = PR2 & 1;
+        PWM3DCLbits.PWM3DCL1 = PR2 & 1;
         PWM3DCH = PR2 >> 1;
         
         // Play the note with the appropriate duration
